@@ -1,0 +1,13 @@
+#ifndef TEST_IMPL
+#define TEST_IMPL
+
+A::A(unsigned int j) : i(j)
+{
+}
+
+A& A::operator+=(const A& k) {
+  i += k();
+  return *this;
+}
+
+#endif // TEST_IMPL

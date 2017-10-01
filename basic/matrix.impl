@@ -1,0 +1,219 @@
+#ifndef MATRIX_IMPL
+#define MATRIX_IMPL
+
+namespace DGALE {
+
+template <std::size_t nrow, std::size_t ncol>
+Matrix<nrow, ncol>::Matrix(const double s)
+{
+  x.fill(VType{s});
+}
+
+template <std::size_t nrow, std::size_t ncol>
+Matrix<nrow, ncol>::Matrix(
+  const std::array<std::array<double, ncol>, nrow> nestedarray)
+{
+  for (std::size_t i = 0; i < nrow; ++i) {
+    x[i] = VType(nestedarray[i]);
+  }
+}
+
+template <std::size_t nrow, std::size_t ncol>
+auto& Matrix<nrow, ncol>::operator=(const double s)
+{
+  x.fill(VType{s});
+  return *this;
+}
+
+template <std::size_t nrow, std::size_t ncol>
+auto Matrix<nrow, ncol>::operator[](const size_type i) const
+{
+  return x[i];
+}
+
+template <std::size_t nrow, std::size_t ncol>
+auto& Matrix<nrow, ncol>::operator[](const size_type i)
+{
+  return x[i];
+}
+
+template <std::size_t nrow, std::size_t ncol>
+auto Matrix<nrow, ncol>::col(const size_type i) const
+{
+  Vector<nrow> result;
+  for (std::size_t j = 0; j < nrow; ++j) {
+    result[j] = x[j][i];
+  }
+  return result;
+}
+
+template <std::size_t nrow, std::size_t ncol>
+auto& Matrix<nrow, ncol>::operator+=(const Matrix<nrow, ncol>& m)
+{
+  for (size_type i = 0; i < nrow; ++i) {
+    x[i] += m.x[i];
+  }
+  return *this;
+}
+
+template <std::size_t nrow, std::size_t ncol>
+auto& Matrix<nrow, ncol>::operator-=(const Matrix<nrow, ncol>& m)
+{
+  for (size_type i = 0; i < nrow; ++i) {
+    x[i] -= m.x[i];
+  }
+  return *this;
+}
+
+template <std::size_t nrow, std::size_t ncol>
+auto& Matrix<nrow, ncol>::operator*=(const double s)
+{
+  for (size_type i = 0; i < nrow; ++i) {
+    x[i] *= s;
+  }
+  return *this;
+}
+
+template <std::size_t nrow, std::size_t ncol>
+auto& Matrix<nrow, ncol>::operator/=(const double s)
+{
+  for (size_type i = 0; i < nrow; ++i) {
+    x[i] /= s;
+  }
+  return *this;
+}
+
+template <std::size_t nrow, std::size_t ncol>
+auto Matrix<nrow, ncol>::norm(double order) const
+{
+  double result = 0;
+  for (typename Matrix<nrow, ncol>::size_type i = 0; i < nrow; ++i) {
+    result += std::abs(x[i]).norm(order);
+  }
+  return std::pow(result, 1.0 / order);
+}
+
+template <std::size_t dim, std::size_t ncol>
+auto dot(const Vector<dim>& a, const Matrix<dim, ncol>& b)
+{
+  Vector<ncol> result{0};
+  for (typename Vector<ncol>::size_type i = 0; i < ncol; ++i) {
+    for (std::size_t j = 0; j < dim; ++j) {
+      result[i] += a[j] * b[j][i];
+    }
+  }
+  return result;
+}
+
+template <std::size_t nrow, std::size_t ncol>
+auto dot(const Matrix<nrow, ncol>& a, const Vector<ncol>& b)
+{
+  Vector<nrow> result{0};
+  for (std::size_t i = 0; i < nrow; ++i) {
+    result[i] = dot(a[i], b);
+  }
+  return result;
+}
+
+template <std::size_t nrow, std::size_t ncol, std::size_t rncol>
+auto dot(Matrix<nrow, ncol> a, Matrix<ncol, rncol> b)
+{
+  Matrix<nrow, rncol> result{0};
+  for (std::size_t i = 0; i < nrow; ++i) {
+    for (std::size_t j = 0; j < rncol; ++j) {
+      for (std::size_t k = 0; k < ncol; ++k) {
+        result[i][j] += a[i][k] * b[k][j];
+      }
+    }
+  }
+  return result;
+}
+
+template <std::size_t nrow, std::size_t ncol>
+std::ostream& operator<<(std::ostream& out, const Matrix<nrow, ncol>& v)
+{
+  out << "[";
+  for (std::size_t i = 0; i < nrow - 1; ++i) {
+    out << "[";
+    for (std::size_t j = 0; j < ncol - 1; ++j) {
+      out << v[i][j] << ", ";
+    }
+    out << v[i][ncol - 1] << "], " << std::endl;
+  }
+  out << "[";
+  for (std::size_t j = 0; j < ncol - 1; ++j) {
+    out << v[nrow - 1][j] << ", ";
+  }
+  out << v[nrow - 1][ncol - 1] << "]";
+  out << "]";
+  return out;
+}
+
+template <std::size_t nrow, std::size_t ncol>
+auto operator+(Matrix<nrow, ncol> left, const Matrix<nrow, ncol>& right)
+{
+  return (left += right);
+}
+
+template <std::size_t nrow, std::size_t ncol>
+auto operator-(Matrix<nrow, ncol> left, const Matrix<nrow, ncol>& right)
+{
+  return (left -= right);
+}
+
+template <std::size_t nrow, std::size_t ncol>
+auto operator*(Matrix<nrow, ncol> left, double scalar)
+{
+  return left *= scalar;
+}
+
+template <std::size_t nrow, std::size_t ncol>
+auto operator*(double scalar, Matrix<nrow, ncol> right)
+{
+  return right *= scalar;
+}
+
+template <std::size_t nrow, std::size_t ncol>
+auto operator/(Matrix<nrow, ncol> left, double scalar)
+{
+  return left /= scalar;
+}
+} // namespace DGALE
+
+namespace std {
+template <std::size_t nrow, std::size_t ncol>
+auto pow(const DGALE::Matrix<nrow, ncol>& m, double order)
+{
+  DGALE::Matrix<nrow, ncol> result;
+  for (std::size_t i = 0; i < nrow; ++i) {
+    result[i] = std::pow(m[i], order);
+  }
+  return result;
+}
+
+template <std::size_t nrow, std::size_t ncol>
+auto abs(const DGALE::Matrix<nrow, ncol>& m)
+{
+  DGALE::Matrix<nrow, ncol> result;
+  for (std::size_t i = 0; i < nrow; ++i) {
+    result[i] = std::abs(m[i]);
+  }
+  return result;
+}
+
+template <std::size_t nrow, std::size_t ncol>
+auto isnan(const DGALE::Matrix<nrow, ncol>& m)
+{
+  bool result = false;
+
+  for (std::size_t i = 0; i < nrow; ++i) {
+    if (std::isnan(m[i])) {
+      result = true;
+      break;
+    }
+  }
+
+  return result;
+}
+} // namespace std
+#endif // MATRIX_IMPL

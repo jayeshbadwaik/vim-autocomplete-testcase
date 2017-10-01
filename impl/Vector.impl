@@ -1,0 +1,228 @@
+#ifndef VECTOR_IMPL
+#define VECTOR_IMPL
+
+namespace DGALE {
+template <std::size_t dim>
+Vector<dim>::Vector(const double s)
+{
+  x.fill(s);
+}
+
+template <std::size_t dim>
+Vector<dim>::Vector(const std::array<double, dim> s) : x(s)
+{
+}
+
+template <std::size_t dim>
+auto& Vector<dim>::operator=(const double s)
+{
+  x.fill(s);
+  return *this;
+}
+
+template <std::size_t dim>
+auto Vector<dim>::operator[](const size_type i) const
+{
+  return x[i];
+}
+
+template <std::size_t dim>
+auto& Vector<dim>::operator[](const size_type i)
+{
+  return x[i];
+}
+
+template <std::size_t dim>
+auto& Vector<dim>::operator+=(const Vector<dim>& v)
+{
+  for (size_type i = 0; i < dim; ++i) {
+    x[i] += v.x[i];
+  }
+  return *this;
+}
+
+template <std::size_t dim>
+auto& Vector<dim>::operator-=(const Vector<dim>& v)
+{
+  for (size_type i = 0; i < dim; ++i) {
+    x[i] -= v.x[i];
+  }
+  return *this;
+}
+
+template <std::size_t dim>
+auto& Vector<dim>::operator*=(const double s)
+{
+  for (size_type i = 0; i < dim; ++i) {
+    x[i] *= s;
+  }
+  return *this;
+}
+
+template <std::size_t dim>
+auto& Vector<dim>::operator/=(const double s)
+{
+  for (size_type i = 0; i < dim; ++i) {
+    x[i] /= s;
+  }
+  return *this;
+}
+
+template <std::size_t dim>
+auto Vector<dim>::norm(double order) const
+{
+  double norm = 0;
+  for (typename Vector<dim>::size_type i = 0; i < dim; ++i) {
+    norm += std::pow(std::abs(x[i]), order);
+  }
+  return std::pow(norm, 1.0 / order);
+}
+
+template <std::size_t dim>
+auto dot(const Vector<dim>& a, const Vector<dim>& b)
+{
+  double result = 0;
+  for (typename Vector<dim>::size_type i = 0; i < dim; ++i) {
+    result += a[i] * b[i];
+  }
+  return result;
+}
+
+template <std::size_t ldim, std::size_t rdim>
+auto outer(const Vector<ldim>& a, const Vector<rdim>& b)
+{
+  Matrix<ldim, rdim> result;
+  for (std::size_t i = 0; i < ldim; ++i) {
+    for (std::size_t j = 0; j < rdim; ++j) {
+      result[i][j] = a[i] * b[j];
+    }
+  }
+  return result;
+}
+
+// Specialized implementation of cross method for two dimensions
+template <>
+auto cross(const Vector<2>& a, const Vector<2>& b)
+{
+  return a[0] * b[1] - a[1] * b[0];
+}
+
+// Specialized implementation of cross method for three dimensions
+template <>
+auto cross(const Vector<3>& a, const Vector<3>& b)
+{
+  Vector<3> cross;
+  cross[0] = a[1] * b[2] - a[2] * b[1];
+  cross[1] = a[2] * b[0] - a[0] * b[2];
+  cross[2] = a[0] * b[1] - a[1] * b[0];
+
+  return cross;
+}
+
+template <std::size_t dim>
+std::ostream& operator<<(std::ostream& out, const Vector<dim>& v)
+{
+  out << "[";
+  for (std::size_t i = 0; i < dim - 1; ++i) {
+    out << v[i] << ", ";
+  }
+  out << v[dim - 1] << "]";
+  return out;
+}
+
+template <std::size_t dim>
+auto operator+(const Vector<dim>& left, const Vector<dim>& right)
+{
+  auto tmp = left;
+  return (tmp += right);
+}
+
+template <std::size_t dim>
+auto operator-(const Vector<dim>& left, const Vector<dim>& right)
+{
+  auto tmp = left;
+  return (tmp -= right);
+}
+
+template <std::size_t dim>
+auto operator*(Vector<dim> vector, const double s)
+{
+  return vector *= s;
+}
+
+template <std::size_t dim>
+auto operator*(const double s, Vector<dim> vector)
+{
+  return vector *= s;
+}
+
+template <std::size_t dim>
+auto operator/(Vector<dim> vector, const double s)
+{
+  return vector /= s;
+}
+
+template <std::size_t dim>
+auto operator/(Vector<dim> a, Vector<dim> b)
+{
+  for (std::size_t i = 0; i < dim; ++i) {
+    a[i] /= b[i];
+  }
+  return a;
+}
+} // namespace DGALE
+
+namespace std {
+template <std::size_t dim>
+auto pow(const DGALE::Vector<dim>& v, double order)
+{
+  DGALE::Vector<dim> result;
+
+  for (std::size_t i = 0; i < dim; ++i) {
+    result[i] = std::pow(v[i], order);
+  }
+
+  return result;
+}
+
+template <std::size_t dim>
+auto abs(const DGALE::Vector<dim>& v)
+{
+  DGALE::Vector<dim> result;
+
+  for (std::size_t i = 0; i < dim; ++i) {
+    result[i] = std::abs(v[i]);
+  }
+
+  return result;
+}
+
+template <std::size_t dim>
+auto isnan(const DGALE::Vector<dim>& v)
+{
+  bool result = false;
+
+  for (std::size_t i = 0; i < dim; ++i) {
+    if (isnan(v[i])) {
+      result = true;
+      break;
+    }
+  }
+
+  return result;
+}
+
+template <std::size_t dim>
+auto cmax(const DGALE::Vector<dim>& a, const DGALE::Vector<dim>& b)
+{
+  DGALE::Vector<dim> result{0};
+
+  for (std::size_t i = 0; i < dim; ++i) {
+    result[i] = std::max(a[i], b[i]);
+  }
+
+  return result;
+}
+} // namespace std
+
+#endif // VECTOR_IMPL
